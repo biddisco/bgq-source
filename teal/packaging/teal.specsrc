@@ -1,0 +1,24 @@
+####################################
+%package teal
+
+Summary: BlueGene TEAL
+Group: %{product_group}
+Release: 0
+
+Requires: teal-base-bg >= 1.1.0.6
+
+%description teal
+%{bgq_package_description}
+
+This package contains BlueGene TEAL.
+
+%files teal
+
+%defattr(-,root,root,755)
+
+/opt/teal/data	
+/opt/teal/ibm
+%config /etc/teal/bgq.conf
+%config /etc/teal/bgq.conf.v1r1m0
+%config /etc/teal/bgq.conf.v1r1m1
+

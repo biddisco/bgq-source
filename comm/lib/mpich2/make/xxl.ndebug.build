@@ -1,0 +1,88 @@
+# -*- mode: makefile-gmake; -*-
+# begin_generated_IBM_copyright_prolog                             #
+#                                                                  #
+# This is an automatically generated copyright prolog.             #
+# After initializing,  DO NOT MODIFY OR MOVE                       #
+#  --------------------------------------------------------------- #
+#                                                                  #
+# (C) Copyright IBM Corp.  2007, 2008                              #
+# IBM CPL License                                                  #
+#                                                                  #
+#  --------------------------------------------------------------- #
+#                                                                  #
+# end_generated_IBM_copyright_prolog                               #
+
+#
+# '--enabled-debuginfo' is somehow related to bgq xl compilers and
+# totalview support.
+#
+
+xxl.ndebug: autoconf
+	mkdir -p ${MPICH2BUILD}-$@
+	cd ${MPICH2BUILD}-$@ &&						\
+	if [ ! -f Makefile ] ; then					\
+	  CC="${FAST_CC}"						\
+	  CXX="${FAST_CXX}"						\
+	  F77="${FAST_F77}"						\
+	  FC="${FAST_F90}"						\
+	  AR="${HOST_AR}"						\
+	  LD="${HOST_LD}"						\
+	  RANLIB="${HOST_RANLIB}"					\
+	  MPICH2LIB_CFLAGS="${FAST_CFLAGS}"				\
+	  MPICH2LIB_CXXFLAGS="${FAST_CXXFLAGS}"				\
+	  MPICH2LIB_FFLAGS="${FAST_FFLAGS}"				\
+	  MPICH2LIB_F90FLAGS="${FAST_FFLAGS}"				\
+	  MPICH2LIB_LDFLAGS="${FAST_LDFLAGS}"				\
+	  CFLAGS="${MPI_CFLAGS}"					\
+	  CXXFLAGS="${MPI_CXXFLAGS}"					\
+	  FFLAGS="${MPI_FFLAGS}"					\
+	  FCFLAGS="${MPI_FFLAGS}"					\
+	  LDFLAGS="${MPI_LDFLAGS}"					\
+	  MPICXXLIBNAME="cxxmpich"					\
+	  ${MPICH2DIR}/configure					\
+	  --enable-static						\
+	  --disable-shared						\
+	  --enable-cache						\
+	  --prefix=${INSTALL_DIR}/$@					\
+	  --mandir=${INSTALL_DIR}/$@/man				\
+	  --htmldir=${INSTALL_DIR}/$@/www				\
+	  --host=${BUILD_HOST}						\
+	  --target=${BUILD_TARGET}					\
+	  --build=${BUILD_BUILD}					\
+	  --enable-dependencies						\
+	  --enable-g=debug						\
+	  --with-device=pamid:${PLATFORM}				\
+	  --enable-romio=yes						\
+	  --enable-f77=yes						\
+	  --enable-fc=yes						\
+	  --with-file-system=${FILE_SYSTEM}				\
+	  --enable-timer-type=device					\
+	  --enable-threads=${THREAD_LEVEL}				\
+	  --with-fwrapname=fmpich					\
+	  --with-cross=${MPICH2DIR}/src/mpid/pamid/cross/${PLATFORMlc}8	\
+	  --with-pm=none						\
+	  --with-mpe=no							\
+	  --enable-timing=no						\
+	  --disable-collchk						\
+	  --disable-graphics						\
+	  --disable-rlog						\
+	  --disable-sample						\
+	  --disable-rpath						\
+	  --with-aint-size=8						\
+									\
+	  --with-assert-level=0						\
+	  --enable-fast=nochkmsg,notiming,O3				\
+	  --disable-error-messages					\
+	  --disable-debuginfo						\
+									\
+	  --with-atomic-primitives					\
+	  --enable-thread-cs=per-object					\
+	  --enable-handle-allocation=tls				\
+	  --enable-refcount=lock-free					\
+	  --disable-predefined-refcount					\
+									\
+	  ${CONFIGURE_WITH_PAMI_XL}					\
+	; fi
+
+	${MAKE} -C ${MPICH2BUILD}-$@
+# This lists specific options for "--enable-fast" because xlf breaks when it sees -DNDEBUG
