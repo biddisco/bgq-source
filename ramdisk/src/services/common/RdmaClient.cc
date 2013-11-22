@@ -54,10 +54,11 @@ RdmaClient::createRegions(RdmaProtectionDomainPtr domain)
 {
    // Create a memory region for inbound messages.
    _inMessageRegion = RdmaMemoryRegionPtr(new RdmaMemoryRegion());
-   int err = _inMessageRegion->allocate64kB(domain);
+//   int err = _inMessageRegion->allocate64kB(domain);
+   int err = _inMessageRegion->allocate(domain, 4096);
    if (err != 0) {
       RdmaError e(err, "allocating inbound memory region failed");
-      LOG_ERROR_MSG(_tag << "error allocating inbound message region: " << bgcios::errorString(err));
+      LOG_ERROR_MSG(_tag << "HERE : error allocating inbound message region: " << bgcios::errorString(err));
       throw e;
    }
 

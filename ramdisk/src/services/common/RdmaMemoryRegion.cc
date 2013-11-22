@@ -31,6 +31,9 @@
 #include <sys/mman.h>
 #include <fcntl.h>
 #include <ramdisk/include/services/common/Cioslog.h>
+#include <bitset>
+
+
 
 using namespace bgcios;
 
@@ -58,7 +61,14 @@ RdmaMemoryRegion::allocate(RdmaProtectionDomainPtr pd, size_t length)
 
    do {
       // Allocate storage for the memory region.
+#ifdef RDMA_USE_MMAP
       void *buffer = ::mmap(NULL, length, PROT_READ|PROT_WRITE, MAP_ANONYMOUS|MAP_PRIVATE, -1, 0);
+#else
+      void *buffer = malloc(length);
+      if (buffer != MAP_FAILED) {
+        LOG_DEBUG_MSG("allocated storage for memory region with malloc OK " << length);
+      }
+#endif
       if (buffer == MAP_FAILED) {
          int err = errno;
          LOG_ERROR_MSG("error allocating storage for memory region: " << bgcios::errorString(err));
@@ -68,12 +78,17 @@ RdmaMemoryRegion::allocate(RdmaProtectionDomainPtr pd, size_t length)
 
       // Register the storage as a memory region.
       int accessFlags = _IBV_ACCESS_LOCAL_WRITE|_IBV_ACCESS_REMOTE_WRITE|_IBV_ACCESS_REMOTE_READ;
+      std::bitset<sizeof(int)*8> bits(accessFlags);
       regionList[attempt] = ibv_reg_mr(pd->getDomain(), buffer, length, (ibv_access_flags)accessFlags);
+
       if (regionList[attempt] == NULL) {
-         LOG_ERROR_MSG("error registering memory region");
-         ::munmap(buffer, length);
+         int err = errno;
+         LOG_ERROR_MSG("error registering ibv_reg_mr error message with flags : " << bits << " " << bgcios::errorString(err));
          _allocateLock->unlock();
          return ENOMEM;
+      }
+      else {
+        LOG_DEBUG_MSG("OK registering ibv_reg_mr with flags : " << bits << " " << length);
       }
 
       // Check on the number of fragments in the memory region.
@@ -148,6 +163,8 @@ RdmaMemoryRegion::allocate64kB(RdmaProtectionDomainPtr pd)
       _region = ibv_reg_mr(pd->getDomain(), buffer, length, (ibv_access_flags)accessFlags);
       if (_region == NULL) {
          LOG_ERROR_MSG("error registering memory region");
+         int err = errno;
+         LOG_ERROR_MSG("ibv_reg_mr error message : " << bgcios::errorString(err));
          ::munmap(buffer, length);
          return ENOMEM;
       }
