@@ -33,7 +33,7 @@
 #include <ramdisk/include/services/common/Cioslog.h>
 #include <bitset>
 
-
+#define RDMA_USE_MMAP 1
 
 using namespace bgcios;
 
@@ -63,18 +63,21 @@ RdmaMemoryRegion::allocate(RdmaProtectionDomainPtr pd, size_t length)
       // Allocate storage for the memory region.
 #ifdef RDMA_USE_MMAP
       void *buffer = ::mmap(NULL, length, PROT_READ|PROT_WRITE, MAP_ANONYMOUS|MAP_PRIVATE, -1, 0);
-#else
-      void *buffer = malloc(length);
       if (buffer != MAP_FAILED) {
-        LOG_DEBUG_MSG("allocated storage for memory region with malloc OK " << length);
+        LOG_DEBUG_MSG("allocated storage for memory region with mmap OK " << length);
       }
-#endif
-      if (buffer == MAP_FAILED) {
+      else if (buffer == MAP_FAILED) {
          int err = errno;
-         LOG_ERROR_MSG("error allocating storage for memory region: " << bgcios::errorString(err));
+         LOG_ERROR_MSG("error allocating storage using mmap for memory region: " << length << " " << bgcios::errorString(err));
          _allocateLock->unlock();
          return err;
       }
+#else
+      void *buffer = malloc(length);
+      if (buffer != NULL) {
+        LOG_DEBUG_MSG("allocated storage for memory region with malloc OK " << length);
+      }
+#endif
 
       // Register the storage as a memory region.
       int accessFlags = _IBV_ACCESS_LOCAL_WRITE|_IBV_ACCESS_REMOTE_WRITE|_IBV_ACCESS_REMOTE_READ;
@@ -83,7 +86,7 @@ RdmaMemoryRegion::allocate(RdmaProtectionDomainPtr pd, size_t length)
 
       if (regionList[attempt] == NULL) {
          int err = errno;
-         LOG_ERROR_MSG("error registering ibv_reg_mr error message with flags : " << bits << " " << bgcios::errorString(err));
+         LOG_ERROR_MSG("error registering ibv_reg_mr error message with flags : " << bits << " " << err << " " << bgcios::errorString(err));
          _allocateLock->unlock();
          return ENOMEM;
       }
@@ -151,7 +154,17 @@ RdmaMemoryRegion::allocate64kB(RdmaProtectionDomainPtr pd)
 {
       size_t length = 65536;
       // Allocate storage for the memory region.
+#ifdef RDMA_USE_MMAP
       void *buffer = ::mmap(NULL, length, PROT_READ|PROT_WRITE, MAP_ANONYMOUS|MAP_PRIVATE, -1, 0);
+      if (buffer != MAP_FAILED) {
+        LOG_DEBUG_MSG("allocated storage for memory region with mmap OK " << length);
+      }
+#else
+      void *buffer = malloc(length);
+      if (buffer != NULL) {
+        LOG_DEBUG_MSG("allocated storage for memory region with malloc OK " << length);
+      }
+#endif
       if (buffer == MAP_FAILED) {
          int err = errno;
          LOG_ERROR_MSG("error allocating storage for memory region: " << bgcios::errorString(err));
@@ -234,8 +247,8 @@ RdmaMemoryRegion::release(void)
       uint32_t length = getLength();
       ibv_dereg_mr(_region);
       ::munmap(buffer, length);
-      _region = NULL;
       LOG_CIOS_DEBUG_MSG("released memory region with local key " << getLocalKey() << " at address " << buffer << " with length " << length);
+      _region = NULL;
    }
 
    return 0;
