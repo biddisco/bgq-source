@@ -31,6 +31,7 @@
 #include <ramdisk/include/services/common/logging.h>
 #include <errno.h>
 #include <sstream>
+#include <iostream>
 
 using namespace bgcios;
 
@@ -39,10 +40,14 @@ LOG_DECLARE_FILE("cios.common");
 
 RdmaDevice::RdmaDevice(std::string device, std::string interface)
 {
+   device = "mlx4_0"; 
+   interface = "ib0";
    // Get the list of InfiniBand devices.
+   std::cout << "about to check InfiniBand devices available on the node" << std::endl;
    int numDevices = 0;
    _deviceList = ibv_get_device_list(&numDevices);
-   if (_deviceList == NULL) {
+   if (_deviceList == NULL || numDevices==0) {
+     std::cout << "there are no InfiniBand devices available on the node" << std::endl;
       LOG_ERROR_MSG("there are no InfiniBand devices available on the node");
       RdmaError e(ENODEV, "no InfiniBand devices available");
       throw e;
@@ -51,6 +56,7 @@ RdmaDevice::RdmaDevice(std::string device, std::string interface)
    // Search for the specified InfiniBand device.
    _myDevice = NULL;
    for (int index = 0; index < numDevices; ++index) {
+     std::cout << "checking device " << ibv_get_device_name(_deviceList[index]) << std::endl;
       if (strcmp(ibv_get_device_name(_deviceList[index]), device.c_str()) == 0) {
          _myDevice = _deviceList[index];
          break;

@@ -54,7 +54,7 @@ RdmaMemoryRegion::allocate(RdmaProtectionDomainPtr pd, size_t length)
 {
    // Obtain lock to serialize getting storage for memory regions.  This makes it more likely that we'll get contiguous physical pages
    // for the memory region (maybe someday we'll be able to use huge pages).
-   _allocateLock->lock();
+//   _allocateLock->lock();
 
    // Allocate memory regions until we get one that is not fragmented or there are too many attempts.
    struct ibv_mr *regionList[MaxAllocateAttempts];

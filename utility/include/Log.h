@@ -271,8 +271,13 @@ std::string calcLoggername( const std::string& base, const std::string& file );
  */
 #define LOG_DECLARE_FILE( base ) \
   static log4cxx::LoggerPtr log_logger_(\
-      log4cxx::Logger::getLogger( bgq::utility::calcLoggername( (base), __FILE__ ) )\
+      log4cxx::Logger::getLogger( "ibm" )\
     )
+
+//#define LOG_DECLARE_FILE( base ) \
+//  static log4cxx::LoggerPtr log_logger_(\
+//      log4cxx::Logger::getLogger( bgq::utility::calcLoggername( (base), __FILE__ ) )\
+//    )
 
 
 // The following macros write log messages at different log levels.
@@ -327,3 +332,4 @@ std::string calcLoggername( const std::string& base, const std::string& file );
 
 
 #endif
+
